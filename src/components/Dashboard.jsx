@@ -1,125 +1,125 @@
 import { useBank } from '../context/BankContext'
+import TopBar from './TopBar'
 
 export default function Dashboard({ setPage }) {
   const { currentUser, dispatch } = useBank()
   const { accounts, goals, transactions } = currentUser
 
-  const totalBalance = accounts.spending.balance + accounts.savings.balance
-  const recentTxs = transactions.slice(0, 3)
-
-  const handleInterest = () => {
-    dispatch({ type: 'ADD_INTEREST', userId: currentUser.id })
-  }
-
-  const topGoal = goals.find((g) => g.saved < g.target) ?? goals[0]
+  const total = accounts.spending.balance + accounts.savings.balance
+  const recentTxs = transactions.slice(0, 4)
+  const topGoal = goals.find(g => g.saved < g.target) ?? goals[0]
 
   return (
-    <div className="page">
-      {/* Header */}
-      <div className="dashboard-header">
-        <div>
-          <p className="greeting">Hey, {currentUser.name}! 👋</p>
-          <p className="greeting-sub">Here's your money overview</p>
-        </div>
-        <span className="avatar-bubble">{currentUser.avatar}</span>
-      </div>
-
-      {/* Total Balance Card */}
-      <div className="card hero-card">
-        <p className="card-label">Total Balance</p>
-        <p className="hero-amount">{fmt(totalBalance)}</p>
-        <div className="account-pills">
-          <span className="pill spending">💳 Spending {fmt(accounts.spending.balance)}</span>
-          <span className="pill savings">🐷 Savings {fmt(accounts.savings.balance)}</span>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <h2 className="section-title">Quick Actions</h2>
-      <div className="quick-actions">
-        {[
-          { label: 'Add Money',   icon: '➕', page: 'accounts' },
-          { label: 'Move Money',  icon: '↔️',  page: 'transfer' },
-          { label: 'My Goals',    icon: '🎯', page: 'goals' },
-          { label: 'Learn',       icon: '📚', page: 'learn' },
-        ].map((a) => (
-          <button key={a.page} className="quick-btn" onClick={() => setPage(a.page)}>
-            <span className="quick-icon">{a.icon}</span>
-            <span className="quick-label">{a.label}</span>
+    <div className="ios-page">
+      <TopBar
+        title={`Hey, ${currentUser.name} ${currentUser.avatar}`}
+        right={
+          <button className="topbar-action" onClick={() =>
+            dispatch({ type: 'ADD_INTEREST', userId: currentUser.id })
+          }>
+            ✨ Interest
           </button>
-        ))}
-      </div>
+        }
+      />
 
-      {/* Savings interest sim */}
-      <div className="card interest-card">
-        <div>
-          <p className="card-label">Savings Interest</p>
-          <p className="interest-rate">Rate: {(accounts.savings.interestRate * 100).toFixed(0)}% / month</p>
-        </div>
-        <button className="btn-sm btn-green" onClick={handleInterest}>
-          Earn Interest!
-        </button>
-      </div>
-
-      {/* Top goal progress */}
-      {topGoal && (
-        <div className="card goal-preview" onClick={() => setPage('goals')} style={{ cursor: 'pointer' }}>
-          <p className="card-label">Top Goal</p>
-          <div className="goal-row">
-            <span className="goal-emoji">{topGoal.emoji}</span>
-            <div className="goal-info">
-              <p className="goal-name">{topGoal.name}</p>
-              <div className="progress-bar-bg">
-                <div
-                  className="progress-bar-fill"
-                  style={{ width: `${Math.min(100, (topGoal.saved / topGoal.target) * 100)}%` }}
-                />
-              </div>
-              <p className="goal-amounts">{fmt(topGoal.saved)} of {fmt(topGoal.target)}</p>
-            </div>
+      <div className="ios-content">
+        {/* Balance hero */}
+        <div className="balance-hero">
+          <p className="balance-hero-label">Total Balance</p>
+          <p className="balance-hero-amount">{fmt(total)}</p>
+          <div className="balance-hero-pills">
+            <span className="hero-pill blue">💳 {fmt(accounts.spending.balance)}</span>
+            <span className="hero-pill green">🐷 {fmt(accounts.savings.balance)}</span>
           </div>
         </div>
-      )}
 
-      {/* Recent transactions */}
-      <h2 className="section-title">Recent Activity</h2>
-      {recentTxs.length === 0 ? (
-        <p className="empty-msg">No transactions yet!</p>
-      ) : (
-        <div className="tx-list">
-          {recentTxs.map((tx) => (
-            <TxRow key={tx.id} tx={tx} />
+        {/* Quick actions */}
+        <div className="ios-section-label">Quick Actions</div>
+        <div className="quick-grid">
+          {[
+            { icon: '➕', label: 'Deposit',  page: 'accounts',  color: 'blue'   },
+            { icon: '↔',  label: 'Transfer', page: 'transfer',  color: 'purple' },
+            { icon: '🎯', label: 'Goals',    page: 'goals',     color: 'orange' },
+            { icon: '📚', label: 'Learn',    page: 'learn',     color: 'teal'   },
+          ].map(a => (
+            <button key={a.page} className={`quick-tile ${a.color}`} onClick={() => setPage(a.page)}>
+              <span className="quick-tile-icon">{a.icon}</span>
+              <span className="quick-tile-label">{a.label}</span>
+            </button>
           ))}
         </div>
-      )}
-      {transactions.length > 3 && (
-        <button className="link-btn" onClick={() => setPage('history')}>
-          View all transactions →
-        </button>
-      )}
+
+        {/* Top goal */}
+        {topGoal && (
+          <>
+            <div className="ios-section-label">Top Goal</div>
+            <div className="ios-group" onClick={() => setPage('goals')} style={{ cursor: 'pointer' }}>
+              <div className="ios-row goal-row-item">
+                <span className="goal-row-emoji">{topGoal.emoji}</span>
+                <div className="goal-row-body">
+                  <div className="goal-row-name">{topGoal.name}</div>
+                  <div className="progress-track">
+                    <div className="progress-fill" style={{ width: `${Math.min(100,(topGoal.saved/topGoal.target)*100)}%` }} />
+                  </div>
+                  <div className="goal-row-amounts">{fmt(topGoal.saved)} of {fmt(topGoal.target)}</div>
+                </div>
+                <span className="ios-chevron">›</span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Recent transactions */}
+        <div className="ios-section-label">Recent Activity</div>
+        {recentTxs.length === 0
+          ? <p className="ios-empty">No transactions yet!</p>
+          : (
+            <div className="ios-group">
+              {recentTxs.map((tx, i) => (
+                <div key={tx.id}>
+                  <TxRow tx={tx} />
+                  {i < recentTxs.length - 1 && <div className="ios-sep" />}
+                </div>
+              ))}
+            </div>
+          )
+        }
+        {transactions.length > 4 && (
+          <button className="ios-more-btn" onClick={() => setPage('history')}>
+            See All Transactions
+          </button>
+        )}
+      </div>
     </div>
   )
 }
 
 export function TxRow({ tx }) {
-  const icon = txIcon(tx.type)
-  const color = tx.type === 'deposit' || tx.type === 'interest' ? 'green' : tx.type === 'transfer' ? 'blue' : 'red'
-  const sign  = tx.type === 'deposit' || tx.type === 'interest' ? '+' : tx.type === 'transfer' ? '↔' : '-'
+  const { icon, color } = txMeta(tx.type)
+  const isPositive = tx.type === 'deposit' || tx.type === 'interest'
+  const sign = tx.type === 'transfer' ? '' : isPositive ? '+' : '−'
+  const amtClass = isPositive ? 'amt-green' : tx.type === 'transfer' ? 'amt-blue' : 'amt-red'
 
   return (
-    <div className="tx-row">
-      <span className="tx-icon">{icon}</span>
-      <div className="tx-info">
-        <p className="tx-note">{tx.note || tx.type}</p>
-        <p className="tx-date">{tx.date} · {tx.account || `${tx.from} → ${tx.to}`}</p>
+    <div className="ios-row tx-item">
+      <div className={`tx-bubble ${color}`}>{icon}</div>
+      <div className="tx-body">
+        <span className="tx-title">{tx.note || tx.type}</span>
+        <span className="tx-sub">{tx.date} · {tx.account ?? `${tx.from}→${tx.to}`}</span>
       </div>
-      <span className={`tx-amount ${color}`}>{sign}{fmt(tx.amount)}</span>
+      <span className={`tx-amt ${amtClass}`}>{sign}{fmt(tx.amount)}</span>
     </div>
   )
 }
 
-function txIcon(type) {
-  return { deposit: '⬆️', withdraw: '⬇️', transfer: '↔️', interest: '✨', goal: '🎯' }[type] ?? '💰'
+function txMeta(type) {
+  return {
+    deposit:  { icon: '↑', color: 'green'  },
+    withdraw: { icon: '↓', color: 'red'    },
+    transfer: { icon: '↔', color: 'blue'   },
+    interest: { icon: '✦', color: 'yellow' },
+    goal:     { icon: '◎', color: 'orange' },
+  }[type] ?? { icon: '●', color: 'grey' }
 }
 
 export function fmt(n) {

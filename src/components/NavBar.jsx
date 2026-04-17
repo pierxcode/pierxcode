@@ -1,33 +1,38 @@
 import { useBank } from '../context/BankContext'
 
 const TABS = [
-  { id: 'dashboard', icon: '🏠', label: 'Home' },
-  { id: 'accounts',  icon: '💳', label: 'Money' },
-  { id: 'transfer',  icon: '↔️',  label: 'Move' },
-  { id: 'goals',     icon: '🎯', label: 'Goals' },
-  { id: 'history',   icon: '📋', label: 'History' },
-  { id: 'learn',     icon: '📚', label: 'Learn' },
+  { id: 'dashboard', icon: '􀎞', emoji: '🏠', label: 'Home'    },
+  { id: 'accounts',  icon: '􀋂', emoji: '💳', label: 'Accounts' },
+  { id: 'transfer',  icon: '􀄿', emoji: '↔',  label: 'Transfer' },
+  { id: 'goals',     icon: '􀎭', emoji: '🎯', label: 'Goals'   },
+  { id: 'history',   icon: '􀋚', emoji: '📋', label: 'History'  },
+  { id: 'learn',     icon: '􀉻', emoji: '📚', label: 'Learn'   },
 ]
 
 export default function NavBar({ page, setPage }) {
   const { dispatch } = useBank()
 
   return (
-    <nav className="navbar">
-      {TABS.map((tab) => (
+    <nav className="tabbar">
+      <div className="tabbar-inner">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            className={`tab-item ${page === tab.id ? 'active' : ''}`}
+            onClick={() => setPage(tab.id)}
+          >
+            <span className="tab-icon">{tab.emoji}</span>
+            <span className="tab-label">{tab.label}</span>
+          </button>
+        ))}
         <button
-          key={tab.id}
-          className={`nav-item ${page === tab.id ? 'active' : ''}`}
-          onClick={() => setPage(tab.id)}
+          className="tab-item tab-exit"
+          onClick={() => dispatch({ type: 'LOGOUT' })}
         >
-          <span className="nav-icon">{tab.icon}</span>
-          <span className="nav-label">{tab.label}</span>
+          <span className="tab-icon">🚪</span>
+          <span className="tab-label">Exit</span>
         </button>
-      ))}
-      <button className="nav-item logout-btn" onClick={() => dispatch({ type: 'LOGOUT' })}>
-        <span className="nav-icon">🚪</span>
-        <span className="nav-label">Exit</span>
-      </button>
+      </div>
     </nav>
   )
 }

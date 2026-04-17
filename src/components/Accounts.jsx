@@ -1,117 +1,108 @@
 import { useState } from 'react'
 import { useBank } from '../context/BankContext'
 import { fmt } from './Dashboard'
+import TopBar from './TopBar'
 
 export default function Accounts() {
   const { currentUser, dispatch } = useBank()
   const { accounts } = currentUser
 
-  const [mode, setMode] = useState(null) // 'deposit' | 'withdraw'
-  const [acct, setAcct] = useState('spending')
+  const [acct, setAcct]     = useState('spending')
+  const [mode, setMode]     = useState(null)
   const [amount, setAmount] = useState('')
-  const [note, setNote] = useState('')
-  const [msg, setMsg] = useState(null)
+  const [note, setNote]     = useState('')
+  const [msg, setMsg]       = useState(null)
 
-  const balance = accounts[acct].balance
+  const flash = (text, type) => { setMsg({ text, type }); setTimeout(() => setMsg(null), 2800) }
 
   const submit = () => {
     const val = parseFloat(amount)
     if (!val || val <= 0) return flash('Enter a valid amount', 'error')
-    if (mode === 'withdraw' && val > balance) return flash('Not enough money!', 'error')
-
+    if (mode === 'withdraw' && val > accounts[acct].balance) return flash('Not enough money!', 'error')
     dispatch({
       type: mode === 'deposit' ? 'DEPOSIT' : 'WITHDRAW',
-      userId: currentUser.id,
-      account: acct,
-      amount: val,
+      userId: currentUser.id, account: acct, amount: val,
       note: note || (mode === 'deposit' ? 'Deposit' : 'Withdrawal'),
     })
-    flash(mode === 'deposit' ? `+${fmt(val)} added! 🎉` : `-${fmt(val)} withdrawn`, 'success')
-    setAmount('')
-    setNote('')
-    setMode(null)
-  }
-
-  const flash = (text, type) => {
-    setMsg({ text, type })
-    setTimeout(() => setMsg(null), 3000)
+    flash(mode === 'deposit' ? `+${fmt(val)} added! 🎉` : `${fmt(val)} withdrawn`, 'success')
+    setAmount(''); setNote(''); setMode(null)
   }
 
   return (
-    <div className="page">
-      <h1 className="page-title">💳 My Accounts</h1>
+    <div className="ios-page">
+      <TopBar title="Accounts" />
+      <div className="ios-content">
 
-      {/* Account cards */}
-      <div className="accounts-grid">
-        <div className={`card account-card spending ${acct === 'spending' ? 'selected' : ''}`}
-          onClick={() => setAcct('spending')}>
-          <p className="acct-type">Spending</p>
-          <p className="acct-emoji">💳</p>
-          <p className="acct-balance">{fmt(accounts.spending.balance)}</p>
-          <p className="acct-desc">For everyday things</p>
+        {/* Account cards */}
+        <div className="acct-cards">
+          {['spending','savings'].map(a => (
+            <button
+              key={a}
+              className={`acct-card ${a} ${acct === a ? 'active' : ''}`}
+              onClick={() => { setAcct(a); setMode(null) }}
+            >
+              <span className="acct-card-icon">{a === 'spending' ? '💳' : '🐷'}</span>
+              <span className="acct-card-label">{a === 'spending' ? 'Spending' : 'Savings'}</span>
+              <span className="acct-card-bal">{fmt(accounts[a].balance)}</span>
+              {a === 'savings' && (
+                <span className="acct-card-sub">{(accounts.savings.interestRate*100).toFixed(0)}% / mo</span>
+              )}
+            </button>
+          ))}
         </div>
-        <div className={`card account-card savings ${acct === 'savings' ? 'selected' : ''}`}
-          onClick={() => setAcct('savings')}>
-          <p className="acct-type">Savings</p>
-          <p className="acct-emoji">🐷</p>
-          <p className="acct-balance">{fmt(accounts.savings.balance)}</p>
-          <p className="acct-desc">Earns {(accounts.savings.interestRate * 100).toFixed(0)}% interest/month</p>
-        </div>
-      </div>
 
-      {/* Action buttons */}
-      <div className="action-row">
-        <button className={`btn btn-green ${mode === 'deposit' ? 'active' : ''}`}
-          onClick={() => setMode(mode === 'deposit' ? null : 'deposit')}>
-          ➕ Deposit
-        </button>
-        <button className={`btn btn-red ${mode === 'withdraw' ? 'active' : ''}`}
-          onClick={() => setMode(mode === 'withdraw' ? null : 'withdraw')}>
-          ➖ Withdraw
-        </button>
-      </div>
-
-      {/* Form */}
-      {mode && (
-        <div className="card form-card">
-          <p className="form-title">
-            {mode === 'deposit' ? '➕ Add money to' : '➖ Take money from'}{' '}
-            <strong>{acct}</strong>
-          </p>
-          <label className="form-label">Amount (€)</label>
-          <input
-            className="form-input"
-            type="number"
-            min="0.01"
-            step="0.01"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-          <label className="form-label">Note (optional)</label>
-          <input
-            className="form-input"
-            type="text"
-            placeholder="What's this for?"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          />
-          <div className="quick-amounts">
-            {[1, 2, 5, 10, 20].map((n) => (
-              <button key={n} className="quick-amount-btn" onClick={() => setAmount(String(n))}>
-                €{n}
-              </button>
-            ))}
-          </div>
-          <button className="btn btn-primary full-width" onClick={submit}>
-            Confirm
+        {/* Action buttons */}
+        <div className="ios-btn-row">
+          <button
+            className={`ios-action-btn ${mode==='deposit' ? 'active-green' : ''}`}
+            onClick={() => setMode(mode==='deposit' ? null : 'deposit')}
+          >
+            ＋ Deposit
+          </button>
+          <button
+            className={`ios-action-btn ${mode==='withdraw' ? 'active-red' : ''}`}
+            onClick={() => setMode(mode==='withdraw' ? null : 'withdraw')}
+          >
+            − Withdraw
           </button>
         </div>
-      )}
 
-      {msg && (
-        <div className={`toast ${msg.type}`}>{msg.text}</div>
-      )}
+        {/* Form */}
+        {mode && (
+          <>
+            <div className="ios-section-label">
+              {mode === 'deposit' ? 'Add money to' : 'Take from'} {acct}
+            </div>
+            <div className="ios-group">
+              <div className="ios-row ios-field">
+                <span className="field-label">Amount</span>
+                <input
+                  className="field-input"
+                  type="number" min="0.01" step="0.01" placeholder="0.00"
+                  value={amount} onChange={e => setAmount(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="ios-sep" />
+              <div className="ios-row ios-field">
+                <span className="field-label">Note</span>
+                <input
+                  className="field-input"
+                  type="text" placeholder="Optional"
+                  value={note} onChange={e => setNote(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="quick-amounts">
+              {[1,2,5,10,20].map(n => (
+                <button key={n} className="quick-chip" onClick={() => setAmount(String(n))}>€{n}</button>
+              ))}
+            </div>
+            <button className="ios-confirm-btn" onClick={submit}>Confirm</button>
+          </>
+        )}
+      </div>
+      {msg && <div className={`ios-toast ${msg.type}`}>{msg.text}</div>}
     </div>
   )
 }
